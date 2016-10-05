@@ -1,0 +1,167 @@
+package generation;
+
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.Hashtable;
+import java.util.Random;
+
+public class MazeBuilderEller extends MazeBuilder implements Runnable {
+
+	/**
+	 * Build a new maze randomly using Eller's algorithm for Maze generation
+	 */
+	public MazeBuilderEller() {
+		super();
+		System.out.println("MazeBuilderEller uses Eller's algorithm to generate maze.");
+	}
+	
+	
+	/**
+	 * Build a new maze determinstically using Eller's algorithm for Maze generation
+	 * @param det if this argument is `true`, the maze will be built deterministically
+	 */
+	public MazeBuilderEller(boolean det) {
+		super(det);
+		System.out.println("MazeBuilderEller uses Eller's algorithm to generate maze.");
+	}
+	
+	
+	/**
+	 * This method generates pathways into the maze by using Eller's algorithm to build the maze row by row, 
+	 * using sets to keep track of which columns are ultimately connected. Building a row consists of 
+	 * randomly connecting adjacent cells within a row (the carveHorizontalPassage() method), then randomly 
+	 * connecting cells between the current row and the next row (the carveVerticalPassage() method).
+	 * 
+	 */
+	
+	//Initialize a 2-D array to keep track of set numbers for each cell in cells.
+	private int[][] sets; 
+	private int setCount = 1; 
+		
+	protected void generatePathways() {
+		sets = new int[width][height];
+		fillArrayWithZeros(sets); 
+		for (int i = 0; i < width; i++){
+			sets[i][0] = setCount;
+			setCount++; 
+		}		 
+		
+		chooseSets(0); 
+		displayArray(sets);
+			
+		  
+		for(int row = 0; row < height - 1; row++){
+			
+			Hashtable<Integer, ArrayList<Integer>> hash = new Hashtable<Integer, ArrayList<Integer>>(); 
+			for(int col = 0; col < width; col++){
+				int current = sets[col][row]; 
+				 
+				if(hash.containsKey(current)){
+					hash.get(current).add(col);
+					hash.put(current, hash.get(current)); 
+				}
+				else{
+					ArrayList<Integer> columnlist = new ArrayList<Integer>();
+					columnlist.add(col); 
+					hash.put(current, columnlist); 
+				}
+			}
+				
+			Collection<Integer> keys = hash.keySet();
+			for(Integer key: keys){
+				Collections.shuffle(hash.get(key)); 
+		        //Choosing how many columns in the list to extend downwards
+		        Random rand = new Random(); 
+		        int numcols = rand.nextInt(hash.get(key).size()) + 1;
+		        for(int j = 0; j < numcols; j++){
+		        	int colnum = hash.get(key).get(j); 
+		        	sets[colnum][row + 1] = key; 
+		        	Wall wall = new Wall(colnum,row,CardinalDirection.South);
+					cells.deleteWall(wall);	
+		        }
+		    }
+		    fillInSets(row+1);
+		    chooseSets(row+1); 
+		}
+		lastRowChooseSets(); 
+	}
+		
+	public int[][] getSets(){
+		return sets; 
+	}
+		
+	
+	private void chooseSets(int row){
+		for(int col = 0; col < width - 1; col++){
+			
+			if(sets[col][row] != sets[col + 1][row]){
+				double remove = Math.random();
+				if(remove >= 0.5){
+					Wall wall = new Wall(col,row,CardinalDirection.East);
+					cells.deleteWall(wall);
+					sets[col + 1][row] = sets[col][row]; 
+				}
+					
+			}
+		}
+	}
+		
+	
+	private void fillInSets(int row){
+		for(int col = 0; col < width - 1; col++){
+			if(sets[col][row] == 0){
+				sets[col][row] = setCount; 
+				setCount++; 
+			}
+		}
+	}
+		
+	
+	private void lastRowChooseSets(){
+		for(int col = 0; col < width - 1; col++){
+			
+			if(sets[col][height - 1] != sets[col + 1][height - 1]){
+				Wall wall = new Wall(col,height - 1,CardinalDirection.East);
+				cells.deleteWall(wall);
+				sets[col + 1][height - 1] = sets[col][height - 1];  
+			}
+		}
+	}
+		
+	
+	private void fillArrayWithZeros(int[][] set){
+		for(int row = 0; row < height; row++){
+			for(int col = 0; col < width; col++){
+				set[col][row] = 0; 
+			}
+		}
+	}
+		
+	
+	private void displayArray(int[][] arr) {
+		for(int row = 0; row < height; row++){
+			for(int col = 0; col < width; col++){
+				System.out.print(arr[col][row] + " "); 
+			}
+			System.out.println();
+		}
+		System.out.println();
+	}
+
+//	private Wall extractWallFromCandidateSetRandomly(final ArrayList<Wall> candidates) {
+//		return candidates.remove(random.nextIntWithinInterval(0, candidates.size()-1)); 
+//	}
+//		
+//	private void updateListOfWalls(int x, int y, ArrayList<Wall> walls) {
+//		Wall wall = new Wall(x, y, CardinalDirection.East);
+//		for (CardinalDirection cd : CardinalDirection.values()) {
+//			wall.setWall(x, y, cd);
+//			if (cells.canGo(wall)) // 
+//			{
+//				walls.add(new Wall(x, y, cd));
+//			}
+//		}
+//	}
+
+}

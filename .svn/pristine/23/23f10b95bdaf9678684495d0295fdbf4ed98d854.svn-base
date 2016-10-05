@@ -1,0 +1,93 @@
+package generation;
+
+import static org.junit.Assert.*;
+
+import java.security.DigestInputStream;
+
+import org.junit.Before;
+import org.junit.Test;
+import generation.Factory;
+import generation.Order;
+
+
+
+public class MazeFactoryTest {
+	private MazeContainer maze;  // setup makes this a width x height cells object
+	private StubOrder stub; // setup makes this a 1x1 cells object 
+	@Before
+	public void setUp() throws Exception {
+
+		//create MazeFactory object 
+		MazeFactory mazeFactory = new MazeFactory(true);
+
+		//create a Stub object
+		StubOrder stub = new StubOrder(0, Order.Builder.Prim); 
+
+		//call order
+		mazeFactory.order(stub); 
+		mazeFactory.waitTillDelivered(); 
+		maze = (MazeContainer)stub.getMaze();
+
+		//bulidOrder using Stub
+
+	}
+
+	@Test
+	// tests for the existence of an exit in the maze
+	public void exitExists() {
+		int[] exit = null;
+		Distance dist = maze.getMazedists(); 
+		int[][] distances = dist.getDists(); 
+		if (distances != null) {
+			// confirms that exit exits
+			exit = dist.getExitPosition();
+		}
+		assertNotNull("Maze has no exit", exit);
+
+	}
+	
+	@Test
+	// Checks that every cell has a solution (distance to exit)
+	public void distToExit() {
+		Distance dist = maze.getMazedists(); 
+		int[][] distances = dist.getDists();
+		for(int row = 0; row < distances.length; row++){
+			for(int col = 0; col < distances.length; col++){
+				assertTrue(maze.getDistanceToExit(row, col) != Integer.MAX_VALUE);
+			}
+		}	
+	}
+	
+	
+//	@Test 
+//	public void roomsExist() {
+//		System.out.println("perfect: "+ stub.isPerfect());
+//		assertFalse(stub.isPerfect());
+//	}
+	
+	
+	@Test
+	// Checks if starting position was generated correctly by checking that the distance
+	// from the starting position is equal to the maximum distance on the maze
+	public void startingPointTest() {
+		Distance dist = maze.getMazedists();
+		int maxDist = dist.getMaxDistance();
+		int[] start = maze.getStartingPosition();
+		int startDist = maze.getDistanceToExit(start[0], start[1]);
+		assertTrue("Distance from start to exit position is not equal to max distance", maxDist == startDist);
+	}
+	
+	
+	@Test
+	// Checks if the neighborCloserToExit method is working properly, meaning that the distance 
+	// to the exit of coordinates returned is less than the distance to exit of the given coordinates.
+	public void neighborCloserToExitTest() {
+		int width = maze.getWidth();
+		int height = maze.getHeight();
+		int initialDist = maze.getDistanceToExit(width/2, height/2);
+		int[] neighbor = maze.getNeighborCloserToExit(width/2, height/2);
+		int neighborDist = maze.getDistanceToExit(neighbor[0], neighbor[1]);
+		assertTrue(neighborDist < initialDist);
+	}
+
+}

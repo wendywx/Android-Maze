@@ -1,0 +1,73 @@
+package generation;
+
+import static org.junit.Assert.*;
+import org.junit.Before;
+import org.junit.Test;
+import generation.Factory;
+import generation.Order;
+
+
+
+public class MazeFactoryTest {
+
+	private MazeContainer maze;  // setup makes this a width x height cells object
+
+	//private Cells cells; // setup makes this a 1x1 cells object 
+
+	@Before
+
+	public void setUp() throws Exception {
+
+		//create MazeFactory object 
+
+		MazeFactory mazeFactory = new MazeFactory(true);
+
+		//create a Stub object
+
+		StubOrder stub = new StubOrder(1, Order.Builder.DFS); 
+
+		mazeFactory.order(stub); 
+
+		mazeFactory.waitTillDelivered(); 
+
+		maze = (MazeContainer)stub.getMaze();
+
+		//call order
+
+		//bulidOrder using Stub
+
+	}
+
+	@Test
+
+	public void exitTest() {
+
+		Distance dist = maze.getMazedists(); 
+
+		int[][] distances = dist.getDists(); 
+
+		for(int row = 0; row < distances.length; row++){
+
+			for(int col = 0; col < distances.length; col++){
+
+				if(row == dist.getExitPosition()[0] && col == dist.getExitPosition()[1]){
+
+					assertEquals("Distance at exit position is not 1!", distances[row][col], 1); 
+
+				}
+
+				assertTrue("Distance at row: " + row + ", col: " + col + " is not a valid integer", 
+
+						distances[row][col] > 0 && distances[row][col] <= dist.getMaxDistance()); 
+
+				System.out.println("row is: " + row + " column is: " + col + " " + distances[row][col]);
+
+			}
+
+		}
+
+	}
+
+
+
+}
